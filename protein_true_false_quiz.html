@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>タンパク質○×クイズ ～SNSのその情報、ホントに正しい？～</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:#1a1a2e;font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;overflow:hidden}
+#slideContainer{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.slide{display:none;width:100%;height:100%;padding:1.8vh 2.5vw 6vh;flex-direction:column;justify-content:flex-start;background:#fff;position:relative;overflow:hidden}
+.slide.active{display:flex}
+
+:root{
+  --blue:#1565c0;
+  --light-blue:#e3f2fd;
+  --green:#2e7d32;
+  --light-green:#e8f5e9;
+  --orange:#e65100;
+  --light-orange:#fff3e0;
+  --red:#c62828;
+  --gray:#546e7a;
+  --bg-slide:#f8faff;
+}
+
+.slide{background:var(--bg-slide)}
+
+.slide-header{display:flex;align-items:center;gap:1vw;margin-bottom:1.5vh;border-bottom:4px solid var(--blue);padding-bottom:1vh}
+.slide-num{background:var(--blue);color:#fff;border-radius:50%;width:4.5vw;height:4.5vw;display:flex;align-items:center;justify-content:center;font-size:1.8vw;font-weight:bold;flex-shrink:0}
+.slide-title{font-size:2.4vw;font-weight:bold;color:var(--blue);line-height:1.2}
+.q-icon{font-size:2.9vw;flex-shrink:0}
+
+.content{flex:1;display:flex;flex-direction:column;justify-content:center;gap:2vh;overflow:hidden;max-width:78vw;width:100%;margin:0 auto}
+
+.card{border-radius:10px;padding:1.6vh 2.2vw;border-left-width:6px;width:100%}
+.card-blue{background:var(--light-blue);border-left:6px solid var(--blue)}
+.card-green{background:var(--light-green);border-left:6px solid var(--green)}
+
+.card-label{font-size:1.2vw;font-weight:bold;letter-spacing:.05em;margin-bottom:.6vh}
+.card-blue .card-label{color:var(--blue)}
+.card-green .card-label{color:var(--green)}
+
+p,li{font-size:1.9vw;line-height:1.65;color:#222}
+strong{color:var(--blue)}
+
+.big-q{font-size:2.3vw;font-weight:bold;color:var(--orange);background:var(--light-orange);border-radius:8px;padding:1.8vh 2.2vw;line-height:1.55;width:100%}
+
+.anim{opacity:0;transition:opacity .4s ease,transform .4s ease;transform:translateY(10px)}
+.anim.show{opacity:1;transform:translateY(0)}
+
+#nav{position:fixed;bottom:1.5vh;right:2vw;display:flex;gap:1vw;z-index:100}
+#nav button{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:.8vh 2.2vw;font-size:1.4vw;cursor:pointer;font-weight:bold}
+#nav button:hover{background:#0d47a1}
+#nav button:disabled{background:#90a4ae;cursor:default}
+#slideInfo{position:fixed;bottom:1.5vh;left:50%;transform:translateX(-50%);color:#fff;font-size:1.3vw;background:rgba(0,0,0,.5);padding:.5vh 2vw;border-radius:20px;font-weight:bold}
+
+.title-slide{background:linear-gradient(135deg,#1565c0 0%,#0d47a1 50%,#1a237e 100%);justify-content:center;align-items:center;text-align:center}
+.title-main{font-size:3.6vw;font-weight:bold;color:#fff;margin-bottom:2vh;line-height:1.35}
+
+.think-box{background:linear-gradient(135deg,#ff6f00,#f57c00);color:#fff;border-radius:10px;padding:1.4vh 2.2vw;display:flex;align-items:center;gap:1.2vw;width:100%}
+.think-box p{color:#fff;font-size:1.7vw}
+.think-icon{font-size:2.6vw;flex-shrink:0}
+
+.highlight{background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;border-radius:12px;padding:1.8vh 2vw;text-align:center;width:100%}
+.highlight p{color:#fff;font-size:1.9vw;font-weight:bold}
+
+.q-badge{display:inline-block;background:var(--orange);color:#fff;border-radius:6px;padding:.3vh 1vw;font-size:1.3vw;font-weight:bold;margin-right:.5vw}
+
+/* クイズ選択肢アイコン */
+.ox-row{display:flex;justify-content:center;gap:6vw;margin:1vh 0}
+.ox-item{display:flex;flex-direction:column;align-items:center;gap:.6vh}
+.ox-symbol{width:11vw;height:11vw;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:6vw;font-weight:900;border:.6vw solid}
+.ox-symbol.o{color:var(--green);border-color:var(--green)}
+.ox-symbol.x{color:var(--red);border-color:var(--red)}
+.ox-label{font-size:1.5vw;color:var(--gray);font-weight:bold}
+
+/* 正解発表 */
+.reveal-wrap{display:flex;flex-direction:column;align-items:center;gap:1.8vh;width:100%}
+.reveal-symbol{font-size:13vw;font-weight:900;line-height:1}
+.reveal-symbol.o{color:var(--green)}
+.reveal-symbol.x{color:var(--red)}
+.reveal-symbol.tri{color:var(--orange)}
+.reveal-caption{font-size:1.6vw;color:var(--gray);text-align:center}
+
+.ref-line{font-size:1.25vw;color:#90a4ae;margin-top:.8vh}
+
+@media print{
+  body{overflow:auto;background:#fff}
+  #nav,#slideInfo{display:none}
+  .slide{display:flex!important;page-break-after:always;height:100vh}
+  .anim{opacity:1!important;transform:none!important}
+}
+</style>
+</head>
+<body>
+<div id="slideContainer">
+
+<!-- ===== SLIDE 1: タイトル ===== -->
+<div class="slide title-slide active" data-anims="0">
+  <div class="title-main">タンパク質○×クイズ<br><span style="font-size:2.4vw">～SNSのその情報、ホントに正しい？～</span></div>
+  <div style="font-size:5.5vw;margin:2vh 0">🥩🥚🌱🥤✨</div>
+</div>
+
+<!-- ===================== Q1 加工肉 ===================== -->
+<div class="slide" data-anims="1">
+  <div class="slide-header">
+    <div class="q-icon">🥓</div>
+    <div class="slide-num">1</div>
+    <div class="slide-title"><span class="q-badge">問1</span> 加工肉は発がん性がある？</div>
+  </div>
+  <div class="content">
+    <div class="big-q">ハム・ソーセージ・ベーコンなどの「加工肉」を食べると、がんになりやすい。○か×か？</div>
+    <div class="ox-row">
+      <div class="ox-item"><div class="ox-symbol o">○</div><div class="ox-label">正しい</div></div>
+      <div class="ox-item"><div class="ox-symbol x">×</div><div class="ox-label">誤り</div></div>
+    </div>
+    <div class="think-box anim" id="s2-a0">
+      <div class="think-icon">⏱</div>
+      <p><strong>30秒考えよう：</strong>ノートに予想と、その理由を書いてみよう。</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-anims="0">
+  <div class="slide-header">
+    <div class="slide-num">1</div>
+    <div class="slide-title">正解発表</div>
+  </div>
+  <div class="content">
+    <div class="reveal-wrap">
+      <div class="reveal-caption">問1「加工肉は発がん性がある？」の答えは…</div>
+      <div class="reveal-symbol o">○</div>
+    </div>
+    <div class="card card-blue">
+      <p>WHOの専門機関IARCは、加工肉を大腸がんの「確実な原因」に分類している。毎日50g（ホットドッグ1本ぶん）を食べ続けると、大腸がんリスクが約18%上がるというデータがある。ただし「絶対食べてはいけない」ではなく「摂りすぎに注意」というのが専門家の見解。</p>
+      <div class="ref-line">参考：WHO／IARC（国際がん研究機関）</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Q2 赤身肉 ===================== -->
+<div class="slide" data-anims="1">
+  <div class="slide-header">
+    <div class="q-icon">🥩</div>
+    <div class="slide-num">2</div>
+    <div class="slide-title"><span class="q-badge">問2</span> 赤身肉は加工肉と同じくらい体に悪い？</div>
+  </div>
+  <div class="content">
+    <div class="big-q">牛肉・豚肉などの「赤身肉」は、加工肉と同じくらい体に悪い。○か×か？</div>
+    <div class="ox-row">
+      <div class="ox-item"><div class="ox-symbol o">○</div><div class="ox-label">正しい</div></div>
+      <div class="ox-item"><div class="ox-symbol x">×</div><div class="ox-label">誤り</div></div>
+    </div>
+    <div class="think-box anim" id="s4-a0">
+      <div class="think-icon">⏱</div>
+      <p><strong>30秒考えよう：</strong>問1の「加工肉」との違いを考えてみよう。</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-anims="0">
+  <div class="slide-header">
+    <div class="slide-num">2</div>
+    <div class="slide-title">正解発表</div>
+  </div>
+  <div class="content">
+    <div class="reveal-wrap">
+      <div class="reveal-caption">問2「赤身肉は加工肉と同じくらい体に悪い？」の答えは…</div>
+      <div class="reveal-symbol tri">△</div>
+    </div>
+    <div class="card card-blue">
+      <p>単純な○×では判断できない、今日唯一の「△」。赤身肉は「安全」ではない（リスクとの関連は報告されている）が、「加工肉と同じくらい」とは言えない。IARCは赤身肉を「おそらく発がん性がある（グループ2A・限定的な証拠）」、加工肉を「発がん性がある（グループ1・確実な証拠）」と区別しており、証拠の確実性のレベルが違う。</p>
+      <div class="ref-line">参考：WHO／IARC（国際がん研究機関）</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Q3 卵 ===================== -->
+<div class="slide" data-anims="1">
+  <div class="slide-header">
+    <div class="q-icon">🥚</div>
+    <div class="slide-num">3</div>
+    <div class="slide-title"><span class="q-badge">問3</span> 卵は1日1個までしか食べてはいけない？</div>
+  </div>
+  <div class="content">
+    <div class="big-q">卵はコレステロールが多いので、1日1個までしか食べてはいけない。○か×か？</div>
+    <div class="ox-row">
+      <div class="ox-item"><div class="ox-symbol o">○</div><div class="ox-label">正しい</div></div>
+      <div class="ox-item"><div class="ox-symbol x">×</div><div class="ox-label">誤り</div></div>
+    </div>
+    <div class="think-box anim" id="s6-a0">
+      <div class="think-icon">⏱</div>
+      <p><strong>30秒考えよう：</strong>「昔ならった常識」と「今の科学的見解」は同じとは限らない。</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-anims="0">
+  <div class="slide-header">
+    <div class="slide-num">3</div>
+    <div class="slide-title">正解発表</div>
+  </div>
+  <div class="content">
+    <div class="reveal-wrap">
+      <div class="reveal-caption">問3「卵は1日1個までしか食べてはいけない？」の答えは…</div>
+      <div class="reveal-symbol x">×</div>
+    </div>
+    <div class="card card-blue">
+      <p>2015年以降、多くの国の食事ガイドラインは「1日1個まで」という上限を撤廃した。健康な人であれば1日1〜2個程度は問題ないとされる。ただし糖尿病がある人などは例外的に注意が必要。</p>
+      <div class="ref-line">参考：厚生労働省／Harvard School of Public Health</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Q4 植物性タンパク質 ===================== -->
+<div class="slide" data-anims="1">
+  <div class="slide-header">
+    <div class="q-icon">🌱</div>
+    <div class="slide-num">4</div>
+    <div class="slide-title"><span class="q-badge">問4</span> 植物性タンパク質は筋肉にならない？</div>
+  </div>
+  <div class="content">
+    <div class="big-q">大豆などの植物性タンパク質だけでは、筋肉はつかない。○か×か？</div>
+    <div class="ox-row">
+      <div class="ox-item"><div class="ox-symbol o">○</div><div class="ox-label">正しい</div></div>
+      <div class="ox-item"><div class="ox-symbol x">×</div><div class="ox-label">誤り</div></div>
+    </div>
+    <div class="think-box anim" id="s8-a0">
+      <div class="think-icon">⏱</div>
+      <p><strong>30秒考えよう：</strong>ヴィーガンのアスリートは実在するだろうか？</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-anims="0">
+  <div class="slide-header">
+    <div class="slide-num">4</div>
+    <div class="slide-title">正解発表</div>
+  </div>
+  <div class="content">
+    <div class="reveal-wrap">
+      <div class="reveal-caption">問4「植物性タンパク質は筋肉にならない？」の答えは…</div>
+      <div class="reveal-symbol x">×</div>
+    </div>
+    <div class="card card-blue">
+      <p>植物性タンパク質でも筋肉量・筋力はしっかり増える。動物性タンパク質の方がやや効果が高い傾向はあるが、総摂取量が十分であればその差はわずか。</p>
+      <div class="ref-line">参考：Nutrition Reviews誌のメタアナリシス</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Q5 アナボリックウィンドウ ===================== -->
+<div class="slide" data-anims="1">
+  <div class="slide-header">
+    <div class="q-icon">⏰</div>
+    <div class="slide-num">5</div>
+    <div class="slide-title"><span class="q-badge">問5</span> 筋トレ後30分以内にタンパク質が必須？</div>
+  </div>
+  <div class="content">
+    <div class="big-q">筋トレ後30分以内にタンパク質を摂らないと、効果が半減する。○か×か？</div>
+    <div class="ox-row">
+      <div class="ox-item"><div class="ox-symbol o">○</div><div class="ox-label">正しい</div></div>
+      <div class="ox-item"><div class="ox-symbol x">×</div><div class="ox-label">誤り</div></div>
+    </div>
+    <div class="think-box anim" id="s10-a0">
+      <div class="think-icon">⏱</div>
+      <p><strong>30秒考えよう：</strong>「〇分以内でないと意味がない」という情報は、SNSでよく見かける典型的な言い回し。</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-anims="0">
+  <div class="slide-header">
+    <div class="slide-num">5</div>
+    <div class="slide-title">正解発表</div>
+  </div>
+  <div class="content">
+    <div class="reveal-wrap">
+      <div class="reveal-caption">問5「筋トレ後30分以内にタンパク質が必須？」の答えは…</div>
+      <div class="reveal-symbol x">×</div>
+    </div>
+    <div class="card card-blue">
+      <p>1日の総タンパク質摂取量が足りていれば、摂取タイミングの影響は非常に小さい。「30分ルール」は誇張された都市伝説的な側面が強い。</p>
+      <div class="ref-line">参考：International Society of Sports Nutrition</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Q6 高タンパク食品だけ ===================== -->
+<div class="slide" data-anims="1">
+  <div class="slide-header">
+    <div class="q-icon">🍗</div>
+    <div class="slide-num">6</div>
+    <div class="slide-title"><span class="q-badge">問6</span> 高タンパク食品だけ食べれば健康？</div>
+  </div>
+  <div class="content">
+    <div class="big-q">高タンパク食品だけを食べていれば、健康になれる。○か×か？</div>
+    <div class="ox-row">
+      <div class="ox-item"><div class="ox-symbol o">○</div><div class="ox-label">正しい</div></div>
+      <div class="ox-item"><div class="ox-symbol x">×</div><div class="ox-label">誤り</div></div>
+    </div>
+    <div class="think-box anim" id="s12-a0">
+      <div class="think-icon">⏱</div>
+      <p><strong>30秒考えよう：</strong>タンパク質以外に体が必要とする栄養素にはどんなものがあっただろう？</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-anims="0">
+  <div class="slide-header">
+    <div class="slide-num">6</div>
+    <div class="slide-title">正解発表</div>
+  </div>
+  <div class="content">
+    <div class="reveal-wrap">
+      <div class="reveal-caption">問6「高タンパク食品だけ食べれば健康？」の答えは…</div>
+      <div class="reveal-symbol x">×</div>
+    </div>
+    <div class="card card-blue">
+      <p>単一の栄養素に偏った食事は、食物繊維・ビタミン・ミネラルなど他の必須栄養素の不足を招きやすい。健康は栄養バランス全体で決まる。</p>
+      <div class="ref-line">参考：厚生労働省／WHO・FAO</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Q7 大豆 ===================== -->
+<div class="slide" data-anims="1">
+  <div class="slide-header">
+    <div class="q-icon">🫘</div>
+    <div class="slide-num">7</div>
+    <div class="slide-title"><span class="q-badge">問7</span> 大豆だけで必要なタンパク質は十分？</div>
+  </div>
+  <div class="content">
+    <div class="big-q">大豆だけで、体に必要なタンパク質は十分摂れる。○か×か？</div>
+    <div class="ox-row">
+      <div class="ox-item"><div class="ox-symbol o">○</div><div class="ox-label">正しい</div></div>
+      <div class="ox-item"><div class="ox-symbol x">×</div><div class="ox-label">誤り</div></div>
+    </div>
+    <div class="think-box anim" id="s14-a0">
+      <div class="think-icon">⏱</div>
+      <p><strong>30秒考えよう：</strong>「植物性タンパク質は不完全」という言葉を聞いたことはある？</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-anims="0">
+  <div class="slide-header">
+    <div class="slide-num">7</div>
+    <div class="slide-title">正解発表</div>
+  </div>
+  <div class="content">
+    <div class="reveal-wrap">
+      <div class="reveal-caption">問7「大豆だけで必要なタンパク質は十分？」の答えは…</div>
+      <div class="reveal-symbol o">○</div>
+    </div>
+    <div class="card card-blue">
+      <p>大豆は9種類の必須アミノ酸をすべて含む「完全タンパク質」。量を十分に摂れば、動物性食品がなくても必要量を満たせる。</p>
+      <div class="ref-line">参考：FAO（アミノ酸スコア評価）</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Q8 摂取量と健康 ===================== -->
+<div class="slide" data-anims="1">
+  <div class="slide-header">
+    <div class="q-icon">📈</div>
+    <div class="slide-num">8</div>
+    <div class="slide-title"><span class="q-badge">問8</span> タンパク質は多く摂るほど健康？</div>
+  </div>
+  <div class="content">
+    <div class="big-q">タンパク質は、多く摂れば摂るほど健康になる。○か×か？</div>
+    <div class="ox-row">
+      <div class="ox-item"><div class="ox-symbol o">○</div><div class="ox-label">正しい</div></div>
+      <div class="ox-item"><div class="ox-symbol x">×</div><div class="ox-label">誤り</div></div>
+    </div>
+    <div class="think-box anim" id="s16-a0">
+      <div class="think-icon">⏱</div>
+      <p><strong>30秒考えよう：</strong>「足りないと悪い」と「多いほど良い」は同じ意味だろうか？</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-anims="0">
+  <div class="slide-header">
+    <div class="slide-num">8</div>
+    <div class="slide-title">正解発表</div>
+  </div>
+  <div class="content">
+    <div class="reveal-wrap">
+      <div class="reveal-caption">問8「タンパク質は多く摂るほど健康？」の答えは…</div>
+      <div class="reveal-symbol x">×</div>
+    </div>
+    <div class="card card-blue">
+      <p>必要量を満たした後にさらに摂っても、追加の健康効果はほとんど確認されていない。栄養素の効果は「摂るほど良くなる」直線的なものではなく、必要量を超えると頭打ちになる。</p>
+      <div class="ref-line">参考：厚生労働省「日本人の食事摂取基準」</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Q9 コラーゲン ===================== -->
+<div class="slide" data-anims="1">
+  <div class="slide-header">
+    <div class="q-icon">✨</div>
+    <div class="slide-num">9</div>
+    <div class="slide-title"><span class="q-badge">問9</span> コラーゲンを食べると肌のコラーゲンが増える？</div>
+  </div>
+  <div class="content">
+    <div class="big-q">コラーゲンを食べると、そのまま肌のコラーゲンが増える。○か×か？</div>
+    <div class="ox-row">
+      <div class="ox-item"><div class="ox-symbol o">○</div><div class="ox-label">正しい</div></div>
+      <div class="ox-item"><div class="ox-symbol x">×</div><div class="ox-label">誤り</div></div>
+    </div>
+    <div class="think-box anim" id="s18-a0">
+      <div class="think-icon">⏱</div>
+      <p><strong>30秒考えよう：</strong>食べたタンパク質は、体の中でどんな形に変化してから吸収されるだろう？</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-anims="0">
+  <div class="slide-header">
+    <div class="slide-num">9</div>
+    <div class="slide-title">正解発表</div>
+  </div>
+  <div class="content">
+    <div class="reveal-wrap">
+      <div class="reveal-caption">問9「コラーゲンを食べると肌のコラーゲンが増える？」の答えは…</div>
+      <div class="reveal-symbol x">×</div>
+    </div>
+    <div class="card card-blue">
+      <p>食べたコラーゲンは消化の過程でアミノ酸やペプチドに分解され、そのまま肌のコラーゲンに"移動"するわけではない。ただし、分解物が肌の水分量・弾力性を間接的に改善する効果は複数の研究で報告されている。</p>
+      <div class="ref-line">参考：Nutrients誌のメタアナリシス</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Q10 プロテインと腎臓 ===================== -->
+<div class="slide" data-anims="1">
+  <div class="slide-header">
+    <div class="q-icon">🥤</div>
+    <div class="slide-num">10</div>
+    <div class="slide-title"><span class="q-badge">問10</span> プロテインは腎臓に悪い？</div>
+  </div>
+  <div class="content">
+    <div class="big-q">プロテイン（高タンパク食）は、腎臓に悪い。○か×か？</div>
+    <div class="ox-row">
+      <div class="ox-item"><div class="ox-symbol o">○</div><div class="ox-label">正しい</div></div>
+      <div class="ox-item"><div class="ox-symbol x">×</div><div class="ox-label">誤り</div></div>
+    </div>
+    <div class="think-box anim" id="s20-a0">
+      <div class="think-icon">⏱</div>
+      <p><strong>30秒考えよう：</strong>「みんなに当てはまる」話と「一部の人にだけ当てはまる」話を、区別できるだろうか。</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-anims="0">
+  <div class="slide-header">
+    <div class="slide-num">10</div>
+    <div class="slide-title">正解発表</div>
+  </div>
+  <div class="content">
+    <div class="reveal-wrap">
+      <div class="reveal-caption">問10「プロテインは腎臓に悪い？」の答えは…</div>
+      <div class="reveal-symbol x">×</div>
+    </div>
+    <div class="card card-blue">
+      <p>健康な腎機能を持つ人では、高タンパク摂取が腎機能を悪化させるという明確な根拠はない。ただし、すでに腎臓病（CKD）がある人では制限が必要な場合があり、答えは対象者によって変わる。</p>
+      <div class="ref-line">参考：Journal of Nutrition誌のメタアナリシス</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slideContainer -->
+
+<div id="nav">
+  <button id="prevBtn" disabled>◀ 前へ</button>
+  <button id="nextBtn">次へ ▶</button>
+</div>
+<div id="slideInfo">1 / 21</div>
+
+<script>
+(function(){
+  var slides = document.querySelectorAll('.slide');
+  var total = slides.length;
+  var cur = 0;
+
+  var animState = {};
+
+  function getAnimElems(slideIdx) {
+    var slide = slides[slideIdx];
+    var animCount = parseInt(slide.getAttribute('data-anims') || '0');
+    if (animCount === 0) return [];
+    var elems = [];
+    for (var i = 0; i < animCount; i++) {
+      var id = 's' + (slideIdx+1) + '-a' + i;
+      var el = document.getElementById(id);
+      if (el) elems.push(el);
+    }
+    return elems;
+  }
+
+  function showSlide(idx) {
+    slides[cur].classList.remove('active');
+    cur = idx;
+    slides[cur].classList.add('active');
+
+    var animElems = getAnimElems(cur);
+    animElems.forEach(function(el){ el.classList.remove('show'); });
+    animState[cur] = 0;
+
+    if (parseInt(slides[cur].getAttribute('data-anims') || '0') === 0) {
+      slides[cur].querySelectorAll('.anim').forEach(function(el){ el.classList.add('show'); });
+    }
+
+    updateNav();
+  }
+
+  function showNextAnim() {
+    var animElems = getAnimElems(cur);
+    var idx = animState[cur] || 0;
+    if (idx < animElems.length) {
+      animElems[idx].classList.add('show');
+      animState[cur] = idx + 1;
+      return true;
+    }
+    return false;
+  }
+
+  function changeSlide(dir) {
+    if (dir === 1) {
+      if (showNextAnim()) return;
+      if (cur < total - 1) showSlide(cur + 1);
+    } else {
+      if (cur > 0) showSlide(cur - 1);
+    }
+  }
+
+  function updateNav() {
+    document.getElementById('prevBtn').disabled = (cur === 0);
+    document.getElementById('nextBtn').disabled = (cur === total - 1);
+    document.getElementById('slideInfo').textContent = (cur+1) + ' / ' + total;
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', function(){ changeSlide(-1); });
+  document.getElementById('nextBtn').addEventListener('click', function(){ changeSlide(1); });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      changeSlide(1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      changeSlide(-1);
+    }
+  });
+
+  var touchStartX = 0;
+  document.addEventListener('touchstart', function(e){ touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', function(e){
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) changeSlide(dx < 0 ? 1 : -1);
+  });
+
+  showSlide(0);
+})();
+</script>
+</body>
+</html>
